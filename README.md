@@ -7,6 +7,12 @@
 
 Unified calendar application that syncs work Outlook and personal iCloud calendars into a cloud database (Supabase) and surfaces everything in a modern web UI with overlap detection, smart deduplication, and family sharing.
 
+## Why LifeSynced?
+
+Microsoft Outlook (commonly used in enterprise/work environments) does not support adding Apple iCloud calendars. The "Accounts" settings only allow connecting Outlook.com, Hotmail, Live, MSN, or Google—**no Apple/iCloud option exists**. For iPhone and iCloud users who rely on Apple Calendar for personal events, this creates a fragmented experience where work and personal calendars cannot be viewed together.
+
+LifeSynced solves this by pulling from both Outlook and iCloud ICS feeds into a unified view.
+
 ## Features
 
 - **Unified view:** Combine work Outlook and personal iCloud calendars into one timeline.
