@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
+// Disable all caching for this route
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const fetchCache = 'force-no-store'
 
 // GET - List all ignored base IDs
 export async function GET() {
@@ -16,7 +19,9 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch ignored base IDs' }, { status: 500 })
     }
     
-    return NextResponse.json(data || [])
+    const response = NextResponse.json(data || [])
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate')
+    return response
   } catch (error: unknown) {
     console.error('Error in ignored-base-ids GET:', error)
     const message = error instanceof Error ? error.message : 'Unknown error'

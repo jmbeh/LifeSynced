@@ -164,7 +164,7 @@ export default function Home() {
   const fetchEvents = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/events?daysAhead=30')
+      const response = await fetch('/api/events?daysAhead=30', { cache: 'no-store' })
       if (!response.ok) throw new Error('Failed to fetch events')
       const data = await response.json()
       setEvents(data)
@@ -177,7 +177,7 @@ export default function Home() {
 
   const fetchIgnoredBaseIds = async () => {
     try {
-      const response = await fetch('/api/ignored-base-ids')
+      const response = await fetch('/api/ignored-base-ids', { cache: 'no-store' })
       if (!response.ok) throw new Error('Failed to fetch ignored base IDs')
       const data = await response.json()
       setIgnoredBaseIds(new Set(data.map((item: any) => item.base_id)))
@@ -189,7 +189,7 @@ export default function Home() {
 
   const fetchIgnoredEventIds = async () => {
     try {
-      const response = await fetch('/api/ignored-event-ids')
+      const response = await fetch('/api/ignored-event-ids', { cache: 'no-store' })
       if (!response.ok) throw new Error('Failed to fetch ignored event IDs')
       const data = await response.json()
       setIgnoredEventIds(new Set(data.map((item: any) => item.event_id)))

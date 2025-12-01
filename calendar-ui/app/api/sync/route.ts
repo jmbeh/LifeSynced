@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server'
 import { supabase, Appointment } from '@/lib/supabase'
 import ICAL from 'ical.js'
 
+// Disable all caching for this route
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const fetchCache = 'force-no-store'
 export const maxDuration = 60 // Allow up to 60 seconds for sync
 
 // Status words that indicate Free/Busy events to skip

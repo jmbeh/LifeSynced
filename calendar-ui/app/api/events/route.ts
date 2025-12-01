@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase, toCalendarEvent } from '@/lib/supabase'
 
+// Disable all caching for this route
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const fetchCache = 'force-no-store'
 
 export async function GET(request: NextRequest) {
   try {
@@ -64,7 +67,12 @@ export async function GET(request: NextRequest) {
       })
       .map(toCalendarEvent)
     
-    return NextResponse.json(events)
+    // Return with no-cache headers to prevent any caching
+    const response = NextResponse.json(events)
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    return response
   } catch (error: unknown) {
     console.error('Error in events API:', error)
     const message = error instanceof Error ? error.message : 'Unknown error'
