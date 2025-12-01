@@ -2,155 +2,128 @@
 
 ![Type](https://img.shields.io/badge/Type-App-blue)
 ![Status](https://img.shields.io/badge/Status-Active-green)
-![Stack](https://img.shields.io/badge/Stack-Python%20%7C%20Next.js-blue)
+![Stack](https://img.shields.io/badge/Stack-Next.js%20%7C%20Supabase-blue)
+![Deploy](https://img.shields.io/badge/Deploy-Vercel-black)
 
-Unified calendar application that syncs work Outlook and personal iCloud calendars into a single SQLite database and surfaces everything in a focused web UI with overlap detection and smart deduplication.
+Unified calendar application that syncs work Outlook and personal iCloud calendars into a cloud database (Supabase) and surfaces everything in a modern web UI with overlap detection, smart deduplication, and family sharing.
 
 ## Features
 
 - **Unified view:** Combine work Outlook and personal iCloud calendars into one timeline.
-- **Time-grid week view:** 24‑hour time grid (0000–2400) with color‑coded sources and side‑by‑side overlap display.
-- **Overlap detection:** Highlight conflicts between work and personal events (excludes all‑day/multi‑day "Free" blocks).
+- **Cloud-first:** Supabase (PostgreSQL) backend with Vercel deployment—accessible from any device.
+- **Time-grid views:** 24-hour grid (0000–2400) with Day, Week, and 4-Week modes.
+- **Overlap detection:** Highlight conflicts between work and personal events.
 - **Smart deduplication:** Avoid duplicate events across sync sources.
-- **Ignore events:** Hide recurring series or individual occurrences you do not want to see.
-- **Mobile-friendly:** Responsive design with Day view default on mobile, Week view on desktop.
-- **Timezone selector:** Switch timezones when traveling to see events in local time.
-- **Local-first automation:** Daily sync via macOS `launchd` or `cron`.
+- **Ignore events:** Hide recurring series or individual occurrences.
+- **Mobile-friendly:** Responsive design—Day view on mobile, Week view on desktop.
+- **Timezone selector:** Switch timezones when traveling.
+- **Event tooltips:** Hover/tap for event details.
+- **Real-time updates:** No caching issues—changes reflect immediately.
 
-## Quick Start
+## Quick Start (Cloud Deployment)
 
-### 1. Install dependencies
+### 1. Set up Supabase
 
-```bash
-pip install -r requirements.txt
-cd calendar-ui
-npm install
-cd ..
-```
+1. Create a project at [supabase.com](https://supabase.com)
+2. Run the schema from `calendar-ui/supabase/schema.sql` in SQL Editor
+3. Copy your project URL and service role key
 
 ### 2. Configure environment
 
-```bash
-cp .env.example .env
-```
-
-Set the core variables in `.env`:
-
-- **Outlook (work)**:
-  - `CLIENT_ID`, `TENANT_ID` for Microsoft Graph API (recommended).
-  - `OUTLOOK_ICS_URL` as a fallback ICS feed if Graph API is not available.
-- **iCloud (personal)**:
-  - `APPLE_CALENDAR_ICS_URL` – one or more public iCloud calendar ICS URLs (comma‑separated).
-- **Database**:
-  - `DB_PATH` – SQLite path (defaults to `calendar.db`).
-
-Optional:
-
-- `APPLE_CALENDAR_ICS_PATH`, `APPLE_CALENDAR_DB_PATH` – alternate Apple Calendar sources.
-- `SKIP_GRAPH_API` – set to `true` to force ICS‑only sync.
-
-See `CLAUDE.md` for provider‑specific setup details and advanced options.
-
-### 3. Sync calendars
+Create `calendar-ui/.env.local`:
 
 ```bash
-python3 sync_all_calendars.py
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+OUTLOOK_ICS_URL=https://outlook.office365.com/owa/calendar/...
+APPLE_CALENDAR_ICS_URL_1=https://p123-caldav.icloud.com/...
+APPLE_CALENDAR_ICS_URL_2=https://p123-caldav.icloud.com/...
 ```
 
-### 4. Start the web UI
+### 3. Deploy to Vercel
 
 ```bash
 cd calendar-ui
-npm run dev
+vercel --prod
 ```
 
-Open `http://localhost:3002` in your browser.
+Add the same environment variables in Vercel project settings.
+
+### 4. Set up automatic sync
+
+Vercel cron syncs daily at 6 AM UTC (configured in `vercel.json`).  
+Manual sync: click the 🔄 button in the UI.
 
 ---
 
-## Scripts
-
-### Backend (Python)
-
-```bash
-python3 sync_all_calendars.py
-python3 sync_calendar.py
-python3 sync_calendar_ics.py
-python3 sync_apple_calendar.py
-python3 query_db.py list
-python3 query_db.py stats
-python3 cleanup_duplicates.py
-python3 manage_ignored_base_ids.py list
-```
-
-### Frontend (Next.js)
+## Local Development
 
 ```bash
 cd calendar-ui
+npm install
 npm run dev
-npm run build
-npm run start
-npm run lint
+```
+
+Open `http://localhost:3002`
+
+---
+
+## Architecture
+
+```
+┌─────────────────┐     ┌──────────────┐     ┌─────────────┐
+│  Outlook ICS    │────▶│              │────▶│             │
+│  iCloud ICS     │     │  Next.js API │     │  Supabase   │
+│  (Calendar      │     │  Routes      │     │  PostgreSQL │
+│   Feeds)        │     │  (TypeScript)│     │             │
+└─────────────────┘     └──────────────┘     └─────────────┘
+                               │
+                               ▼
+                        ┌──────────────┐
+                        │   React UI   │
+                        │  (Next.js)   │
+                        └──────────────┘
 ```
 
 ## Environment Variables
 
-- **`CLIENT_ID`** – Azure app client ID for Microsoft Graph API.
-- **`TENANT_ID`** – Azure tenant ID for Microsoft Graph API.
-- **`OUTLOOK_ICS_URL`** – Outlook ICS feed URL (fallback or alternative to Graph API).
-- **`APPLE_CALENDAR_ICS_URL`** – one or more public iCloud calendar ICS URLs (comma‑separated).
-- **`APPLE_CALENDAR_ICS_PATH`** – optional path(s) to local Apple Calendar `.ics` exports.
-- **`APPLE_CALENDAR_DB_PATH`** – optional path to macOS `Calendar.sqlite`.
-- **`DB_PATH`** – SQLite database path (defaults to `calendar.db` in the project root).
-- **`SKIP_GRAPH_API`** – when `true`, skip Graph API and use ICS‑only sync.
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-side only) |
+| `OUTLOOK_ICS_URL` | Outlook calendar ICS feed URL |
+| `APPLE_CALENDAR_ICS_URL_1` | First iCloud calendar ICS URL |
+| `APPLE_CALENDAR_ICS_URL_2` | Second iCloud calendar ICS URL (optional) |
 
-## Deployment & Automation (macOS)
+## Database Schema
 
-For local automation with `launchd`:
+- **`appointments`** – All calendar events with subject, times, location, organizer, source
+- **`ignored_base_ids`** – Recurring series to hide
+- **`ignored_event_ids`** – Individual occurrences to hide
+- **`sync_metadata`** – Last sync timestamps
 
-```bash
-cp com.lifesynced.calendar.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.lifesynced.calendar.plist
-```
+Row Level Security (RLS) is enabled for data protection.
 
-Or using `cron`:
+## API Routes
 
-```bash
-crontab -e
-```
-
-Then add:
-
-```bash
-0 6 * * * cd "/Users/jmbeh/Builder_Lab/LifeSynced" && /usr/bin/python3 sync_all_calendars.py >> /tmp/calendar_sync.log 2>&1
-```
-
-## Data Model
-
-- **`appointments`** – unified events from Graph API, ICS, and Apple calendars with subject, start/end times, location, organizer, attendees (JSON), and metadata.
-- **`ignored_base_ids`** – recurring event identifiers you want hidden, with subject and reason.
-
-Deduplication:
-
-- Graph API wins over ICS when both exist.
-- Within the same source, duplicates are detected by `subject`, `start_time`, and `organizer_email`.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/events` | GET | Fetch events (filtered by ignored lists) |
+| `/api/sync` | POST | Trigger calendar sync |
+| `/api/ignored-base-ids` | GET/POST/DELETE | Manage ignored series |
+| `/api/ignored-event-ids` | GET/POST/DELETE | Manage ignored occurrences |
 
 ## Troubleshooting
 
-- **Missing events:** Check calendar sharing permissions and prefer Graph API over ICS for full details.
-- **Timezone issues:** Events are normalized to Pacific time (including DST); only some complex recurrence rules may misbehave.
-- **ModuleNotFoundError:** Ensure you are using the Python environment with dependencies installed:
-
-```bash
-python3 -c "import msal; print('msal installed')"
-```
+- **Events not updating:** Cleared via proper cache headers—should update immediately
+- **Missing recurring events:** Sync expands up to 500 occurrences per series
+- **Timezone wrong:** Select correct timezone from the 🌐 dropdown
 
 ## Development
 
-- See `CLAUDE.md` for full project structure, environment details, and advanced commands.
-- Use the template and refinement prompt in `Docs_MyPrompts/READMEs` to keep this README concise and up to date as the project evolves.
+See `CLAUDE.md` for detailed project structure and commands.
 
 ---
 
 **Status:** Active  
-**Purpose:** Personal productivity tool – unified calendar view
+**Purpose:** Personal/family productivity—unified calendar view with cloud sync

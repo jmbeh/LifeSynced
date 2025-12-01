@@ -1,148 +1,159 @@
 # LifeSynced
 
 ## Project Type
-Hybrid application: Python backend (calendar sync) + Next.js frontend (web UI)
+Full-stack Next.js application with Supabase (PostgreSQL) backend, deployable to Vercel.
 
 ## Key Commands
 
-### Backend (Calendar Sync)
-```bash
-# Sync all calendars (work Outlook + personal iCloud)
-python3 sync_all_calendars.py
-
-# Sync individual calendars
-python3 sync_calendar.py              # Outlook via Graph API
-python3 sync_calendar_ics.py          # Outlook via ICS feed
-python3 sync_apple_calendar.py        # iCloud calendars
-
-# Query database
-python3 query_db.py list              # List upcoming events
-python3 query_db.py stats             # Database statistics
-
-# Cleanup duplicates
-python3 cleanup_duplicates.py
-
-# Manage ignored events
-python3 manage_ignored_base_ids.py list
-python3 manage_ignored_base_ids.py add <base_id> [subject] [reason]
-python3 manage_ignored_base_ids.py remove <base_id>
-```
-
-### Frontend (Web UI)
+### Development
 ```bash
 cd calendar-ui
-
-# Development
 npm install                           # First time only
 npm run dev                           # Start dev server (port 3002)
-
-# Production
 npm run build                         # Build for production
-npm run start                         # Start production server
-
-# Linting
 npm run lint                          # Run ESLint
 ```
 
-### Automation
+### Deployment
 ```bash
-# macOS launchd (recommended)
-cp com.lifesynced.calendar.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.lifesynced.calendar.plist
+cd calendar-ui
+vercel --prod                         # Deploy to Vercel
+```
 
-# Or use cron
-crontab -e
-# Add: 0 6 * * * cd "/Users/jmbeh/Builder_Lab/LifeSynced" && /usr/bin/python3 sync_all_calendars.py >> /tmp/calendar_sync.log 2>&1
+### Database
+```sql
+-- Run in Supabase SQL Editor
+-- See: calendar-ui/supabase/schema.sql
+```
+
+### Legacy Python Scripts (local SQLite only)
+```bash
+python3 sync_all_calendars.py         # Sync to local SQLite
+python3 query_db.py list              # Query local database
+python3 query_db.py stats             # Database statistics
 ```
 
 ## Project Structure
 ```
 LifeSynced/
-├── sync_calendar.py              # Outlook sync via Microsoft Graph API
-├── sync_calendar_ics.py          # Outlook sync via ICS feed (no admin consent)
-├── sync_apple_calendar.py        # iCloud calendar sync
-├── sync_all_calendars.py         # Master sync script (runs all syncs)
-├── shared_db.py                  # Unified database interface
-├── timezone_utils.py             # Timezone handling utilities
-├── query_db.py                   # CLI database query tool
-├── cleanup_duplicates.py         # Remove duplicate events
-├── manage_ignored_base_ids.py    # Manage ignored recurring events
-├── calendar.db                   # SQLite database (gitignored)
-├── .token_cache.json             # MSAL token cache (gitignored)
-├── calendar-ui/                  # Next.js web interface
-│   ├── app/                      # Next.js app directory
-│   │   ├── page.tsx              # Main calendar view
-│   │   ├── api/                  # API routes
-│   │   │   ├── events/           # GET /api/events
-│   │   │   ├── sync/             # POST /api/sync
-│   │   │   └── ignored-base-ids/ # Manage ignored events
-│   │   └── globals.css           # TailwindCSS styles
-│   ├── query_db_api.py           # Python script called by API routes
-│   └── package.json              # Next.js dependencies
-└── requirements.txt              # Python dependencies
+├── calendar-ui/                      # Next.js application
+│   ├── app/                          # App Router pages
+│   │   ├── page.tsx                  # Main calendar UI
+│   │   ├── globals.css               # TailwindCSS styles
+│   │   └── api/                      # API routes
+│   │       ├── events/route.ts       # GET events (with ignore filtering)
+│   │       ├── sync/route.ts         # POST sync (ICS parsing in TypeScript)
+│   │       ├── ignored-base-ids/     # Manage ignored series
+│   │       └── ignored-event-ids/    # Manage ignored occurrences
+│   ├── lib/
+│   │   └── supabase.ts               # Supabase client + types
+│   ├── supabase/
+│   │   └── schema.sql                # Database schema (run in Supabase)
+│   ├── types/
+│   │   └── ical.js.d.ts              # TypeScript types for ical.js
+│   ├── vercel.json                   # Vercel config + cron job
+│   ├── .env.local                    # Local environment (gitignored)
+│   └── env.example                   # Environment template
+├── sync_calendar.py                  # Legacy: Outlook Graph API sync
+├── sync_calendar_ics.py              # Legacy: Outlook ICS sync
+├── sync_apple_calendar.py            # Legacy: iCloud sync
+├── shared_db.py                      # Legacy: SQLite interface
+├── calendar.db                       # Legacy: Local SQLite (gitignored)
+└── requirements.txt                  # Legacy: Python dependencies
 ```
 
 ## Environment Variables
-Required in root `.env`:
-- `CLIENT_ID` - Azure app client ID (for Graph API method)
-- `TENANT_ID` - Azure tenant ID (for Graph API method)
-- `OUTLOOK_ICS_URL` - Outlook ICS feed URL (alternative to Graph API)
-- `APPLE_CALENDAR_ICS_URL` - iCloud calendar ICS URL(s), comma-separated
-- `APPLE_CALENDAR_ICS_PATH` - Alternative: path to ICS file(s), comma-separated
-- `APPLE_CALENDAR_DB_PATH` - Fallback: macOS Calendar.sqlite path
-- `DB_PATH` - SQLite database path (default: `calendar.db`)
-- `SKIP_GRAPH_API` - Set to `true` to disable Graph API sync (default: `False`)
+
+### Required (calendar-ui/.env.local)
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+OUTLOOK_ICS_URL=https://outlook.office365.com/owa/calendar/.../calendar.ics
+APPLE_CALENDAR_ICS_URL_1=https://p123-caldav.icloud.com/published/2/...
+APPLE_CALENDAR_ICS_URL_2=https://p123-caldav.icloud.com/published/2/...
+```
+
+### Optional (legacy Python scripts)
+```bash
+CLIENT_ID=azure-app-client-id
+TENANT_ID=azure-tenant-id
+DB_PATH=calendar.db
+SKIP_GRAPH_API=true
+```
 
 ## Development Notes
 
-### Backend
-- Python 3.9+ required
-- Uses `msal` for Microsoft Graph API authentication
-- Uses `icalendar` and `python-dateutil` for ICS parsing
-- SQLite database stores all events with deduplication
-- Timezone handling via `timezone_utils.py` (normalizes to UTC/Pacific)
-
-### Frontend
-- Next.js 14 with App Router
-- TypeScript + React
+### Frontend (Next.js 14)
+- TypeScript + React with App Router
 - TailwindCSS for styling
-- Port 3002 (to avoid conflicts with other Next.js apps)
-- API routes call Python scripts via `execSync`
-- Time-grid week view with sticky headers and side-by-side overlap display
-- Overlap detection between work and personal calendars
-- Mobile-responsive: Day view default on mobile (<768px), Week view on desktop
-- Timezone selector for travel scenarios
-- View modes: Day, Week, 4-Week
+- Port 3002 (configurable)
+- View modes: Day (mobile default), Week (desktop default), 4-Week
+- 24-hour time grid (0000–2400)
+- Side-by-side display for overlapping events
+- Timezone selector with local storage persistence
+- Event tooltips on hover/tap
+- Mobile-responsive with touch-friendly controls
+
+### Backend (Supabase)
+- PostgreSQL database hosted on Supabase
+- Row Level Security (RLS) enabled
+- Service role key for server-side access (bypasses RLS)
+- All sync logic in TypeScript API routes (no Python dependency for cloud)
+
+### Sync Logic
+- ICS parsing via `ical.js` library
+- Recurring events expanded up to 500 occurrences
+- Events stored with UTC timestamps
+- Deduplication by event ID (upsert on conflict)
+- Automatic cron sync daily at 6 AM UTC (Vercel)
+
+### Caching
+- All API routes use `force-dynamic`, `revalidate=0`, `fetchCache='force-no-store'`
+- Response headers: `Cache-Control: no-store, no-cache, must-revalidate`
+- Frontend fetches use `cache: 'no-store'`
+- Changes reflect immediately without server restart
 
 ### Database Schema
-- `appointments` table: id, subject, start_time, end_time, location, organizer_email, organizer_name, attendees (JSON), body_preview, is_all_day, source, created_at, updated_at
-- `ignored_base_ids` table: base_id, subject, ignored_at, reason
-- `ignored_event_ids` table: event_id, subject, start_time, reason, ignored_at (for individual occurrences)
+```sql
+appointments (
+  id TEXT PRIMARY KEY,
+  subject TEXT NOT NULL,
+  start_time TIMESTAMPTZ NOT NULL,
+  end_time TIMESTAMPTZ NOT NULL,
+  location TEXT,
+  organizer_email TEXT,
+  organizer_name TEXT,
+  attendees JSONB,
+  body_preview TEXT,
+  is_all_day BOOLEAN,
+  source TEXT CHECK (source IN ('graph_api', 'ics', 'apple_calendar')),
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+)
 
-### Sync Methods
-1. **Microsoft Graph API** (best data quality, requires admin consent)
-2. **ICS Feed** (no admin consent, limited event details)
-3. **iCloud Public Calendar** (recommended for personal calendars)
+ignored_base_ids (base_id TEXT PRIMARY KEY, subject TEXT, ignored_at TIMESTAMPTZ, reason TEXT)
+ignored_event_ids (event_id TEXT PRIMARY KEY, subject TEXT, start_time TEXT, reason TEXT, ignored_at TIMESTAMPTZ)
+sync_metadata (id TEXT PRIMARY KEY, last_outlook_sync TIMESTAMPTZ, last_ics_sync TIMESTAMPTZ, last_apple_sync TIMESTAMPTZ)
+```
 
-### Known Issues
-- Some complex RRULE patterns fail to parse (recurring events)
+### Known Limitations
 - ICS feeds may show "[Busy]" instead of actual event titles (Outlook privacy)
-- Timezone normalization fixes most DST issues
+- Very long recurring series (>500 occurrences) may be truncated
+- No two-way sync (read-only calendar view)
 
-### Testing
+## Testing
 ```bash
-# Test sync
-python3 sync_all_calendars.py
-
-# Test database query
-python3 query_db.py stats
-
-# Test web UI
+# Local development
 cd calendar-ui && npm run dev
 # Open http://localhost:3002
+
+# Test sync
+curl -X POST http://localhost:3002/api/sync
+
+# Test events API
+curl http://localhost:3002/api/events | jq '. | length'
 ```
 
 ---
 
 **Last Updated:** 2025-12-01
-
