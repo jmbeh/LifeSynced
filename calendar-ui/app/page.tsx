@@ -53,6 +53,14 @@ export default function Home() {
   const [ignoreModalEvent, setIgnoreModalEvent] = useState<CalendarEvent | null>(null)
   const [isRecurringEvent, setIsRecurringEvent] = useState(false)
   
+  // Personal events reveal state (default: always masked)
+  const [personalRevealed, setPersonalRevealed] = useState(false)
+  const [canRevealPersonal, setCanRevealPersonal] = useState(true)
+  const [showRevealModal, setShowRevealModal] = useState(false)
+  const [revealPassword, setRevealPassword] = useState('')
+  const [revealError, setRevealError] = useState('')
+  const [revealLoading, setRevealLoading] = useState(false)
+  
   // Hover tooltip state
   const [hoveredEvent, setHoveredEvent] = useState<CalendarEvent | null>(null)
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
@@ -88,12 +96,63 @@ export default function Home() {
     fetchEvents()
     fetchIgnoredBaseIds()
     fetchIgnoredEventIds()
+    checkPersonalRevealStatus()
     // Load saved timezone from localStorage
     const savedTimezone = localStorage.getItem('lifesynced_timezone')
     if (savedTimezone) {
       setTimezone(savedTimezone)
     }
   }, [])
+  
+  const checkPersonalRevealStatus = async () => {
+    try {
+      const response = await fetch('/api/personal-reveal', { cache: 'no-store' })
+      const data = await response.json()
+      setPersonalRevealed(data.revealed || false)
+      setCanRevealPersonal(data.canReveal !== false) // Default to true if not specified
+    } catch (error) {
+      console.error('Error checking personal reveal status:', error)
+    }
+  }
+  
+  const handleRevealSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setRevealLoading(true)
+    setRevealError('')
+    
+    try {
+      const response = await fetch('/api/personal-reveal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: revealPassword })
+      })
+      
+      if (response.ok) {
+        setPersonalRevealed(true)
+        setShowRevealModal(false)
+        setRevealPassword('')
+        // Refresh events to get unmasked data
+        await fetchEvents()
+      } else {
+        setRevealError('Incorrect password')
+      }
+    } catch {
+      setRevealError('Something went wrong')
+    } finally {
+      setRevealLoading(false)
+    }
+  }
+  
+  const handleHidePersonal = async () => {
+    try {
+      await fetch('/api/personal-reveal', { method: 'DELETE' })
+      setPersonalRevealed(false)
+      // Refresh events to get masked data
+      await fetchEvents()
+    } catch (error) {
+      console.error('Error hiding personal events:', error)
+    }
+  }
   
   const handleTimezoneChange = (newTimezone: string) => {
     setTimezone(newTimezone)
@@ -606,6 +665,34 @@ export default function Home() {
               <span className="hidden sm:inline">Ignored Events</span>
               <span className="sm:hidden">Ignored</span>
               <span>({ignoredSeriesList.length + ignoredOccurrencesList.length})</span>
+            </button>
+            
+            {/* Personal Events Reveal Toggle - always show since events are masked by default */}
+            <button
+              onClick={() => {
+                if (personalRevealed) {
+                  handleHidePersonal()
+                } else if (canRevealPersonal) {
+                  setShowRevealModal(true)
+                }
+              }}
+              disabled={!personalRevealed && !canRevealPersonal}
+              className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-full flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium shadow-sm transition-all whitespace-nowrap flex-shrink-0 ${
+                personalRevealed 
+                  ? 'bg-green-500 text-white hover:bg-green-600 border border-green-500' 
+                  : !canRevealPersonal
+                    ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                    : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+              }`}
+              title={personalRevealed 
+                ? 'Personal event names are visible. Click to hide.' 
+                : canRevealPersonal 
+                  ? 'Personal event names are hidden. Click to reveal.' 
+                  : 'Personal reveal password not configured on server.'}
+            >
+              <span>{personalRevealed ? '🔓' : '🔒'}</span>
+              <span className="hidden sm:inline">{personalRevealed ? 'Personal Revealed' : 'Personal Hidden'}</span>
+              <span className="sm:hidden">{personalRevealed ? 'Revealed' : 'Hidden'}</span>
             </button>
 
             {/* Logout Button */}
@@ -1294,6 +1381,55 @@ export default function Home() {
               <button
                 onClick={() => setIgnoreModalEvent(null)}
                 className="w-full mt-2 sm:mt-3 px-4 py-2 text-gray-600 hover:text-gray-800 font-medium text-sm sm:text-base"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Personal Events Reveal Modal */}
+        {showRevealModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+            <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-4 sm:p-6 max-w-md w-full">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Reveal Personal Events</h3>
+              <p className="text-gray-600 mb-4 text-sm">
+                Enter the reveal password to see personal calendar event names. This is separate from the app access password.
+              </p>
+              
+              <form onSubmit={handleRevealSubmit} className="space-y-4">
+                <div>
+                  <input
+                    type="password"
+                    value={revealPassword}
+                    onChange={(e) => setRevealPassword(e.target.value)}
+                    placeholder="Reveal password"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-base bg-white placeholder-gray-400"
+                    style={{ color: '#111827', WebkitTextFillColor: '#111827' }}
+                    autoFocus
+                  />
+                </div>
+                
+                {revealError && (
+                  <p className="text-red-500 text-sm">{revealError}</p>
+                )}
+                
+                <button
+                  type="submit"
+                  disabled={revealLoading || !revealPassword}
+                  className="w-full px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300 font-medium transition-colors"
+                >
+                  {revealLoading ? 'Verifying...' : 'Reveal Events'}
+                </button>
+              </form>
+              
+              <button
+                onClick={() => {
+                  setShowRevealModal(false)
+                  setRevealPassword('')
+                  setRevealError('')
+                }}
+                className="w-full mt-3 px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
               >
                 Cancel
               </button>

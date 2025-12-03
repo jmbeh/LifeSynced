@@ -71,6 +71,8 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 OUTLOOK_ICS_URL=https://outlook.office365.com/owa/calendar/.../calendar.ics
 APPLE_CALENDAR_ICS_URL_1=https://p123-caldav.icloud.com/published/2/...
 APPLE_CALENDAR_ICS_URL_2=https://p123-caldav.icloud.com/published/2/...
+APP_PASSWORD=your-app-password
+PERSONAL_REVEAL_PASSWORD=your-reveal-password  # Optional: masks personal events for demos
 ```
 
 ### Optional (legacy Python scripts)
@@ -135,6 +137,14 @@ ignored_base_ids (base_id TEXT PRIMARY KEY, subject TEXT, ignored_at TIMESTAMPTZ
 ignored_event_ids (event_id TEXT PRIMARY KEY, subject TEXT, start_time TEXT, reason TEXT, ignored_at TIMESTAMPTZ)
 sync_metadata (id TEXT PRIMARY KEY, last_outlook_sync TIMESTAMPTZ, last_ics_sync TIMESTAMPTZ, last_apple_sync TIMESTAMPTZ)
 ```
+
+### Privacy Mode (Personal Event Masking)
+- Personal calendar events ALWAYS show as "[Personal Event]" by default
+- Overlap detection still works with masked events (highlights conflicts)
+- Set `PERSONAL_REVEAL_PASSWORD` to enable reveal capability
+- Only you (with the password) can click "🔒 Personal Hidden" to reveal actual event names
+- Reveal expires after 24 hours (shorter than main auth)
+- Work calendar events already masked by Outlook ("[Busy]", "[Tentative]")
 
 ### Known Limitations
 - ICS feeds may show "[Busy]" instead of actual event titles (Outlook privacy)

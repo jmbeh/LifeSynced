@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { supabase, toCalendarEvent } from '@/lib/supabase'
 
 // Disable all caching for this route
@@ -10,6 +11,12 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const daysAhead = parseInt(searchParams.get('days') || '30', 10)
+    
+    // Check if personal events should be revealed
+    // Default: always masked. Only revealed with correct password.
+    const cookieStore = await cookies()
+    const revealCookie = cookieStore.get('lifesynced_personal_reveal')
+    const personalRevealed = revealCookie?.value === 'revealed'
     
     // Calculate date range - use UTC to match Supabase storage
     const now = new Date()
@@ -65,7 +72,18 @@ export async function GET(request: NextRequest) {
         
         return true
       })
-      .map(toCalendarEvent)
+      .map(apt => {
+        const event = toCalendarEvent(apt)
+        
+        // Mask personal calendar event names if not revealed
+        if (apt.source === 'apple_calendar' && !personalRevealed) {
+          event.subject = '[Personal Event]'
+          // Also mask location for privacy
+          event.location = ''
+        }
+        
+        return event
+      })
     
     // Return with no-cache headers to prevent any caching
     const response = NextResponse.json(events)
