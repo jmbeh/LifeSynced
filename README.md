@@ -1,4 +1,4 @@
-# LifeSynced
+# 📅 LifeSynced
 
 ![Type](https://img.shields.io/badge/Type-App-blue)
 ![Status](https://img.shields.io/badge/Status-Active-green)
@@ -13,7 +13,7 @@ Microsoft Outlook (commonly used in enterprise/work environments) does not suppo
 
 LifeSynced solves this by pulling from both Outlook and iCloud ICS feeds into a unified view.
 
-## Features
+## ✨ Features
 
 - **Unified view:** Combine work Outlook and personal iCloud calendars into one timeline.
 - **Cloud-first:** Supabase (PostgreSQL) backend with Vercel deployment—accessible from any device.
@@ -26,7 +26,7 @@ LifeSynced solves this by pulling from both Outlook and iCloud ICS feeds into a 
 - **Event tooltips:** Hover/tap for event details.
 - **Real-time updates:** No caching issues—changes reflect immediately.
 
-## Quick Start (Cloud Deployment)
+## 🚀 Quick Start (Cloud Deployment)
 
 ### 1. Set up Supabase
 
@@ -91,7 +91,7 @@ Open `http://localhost:3002`
                         └──────────────┘
 ```
 
-## Environment Variables
+## 🔑 Environment Variables
 
 | Variable | Description |
 |----------|-------------|
@@ -119,17 +119,17 @@ Row Level Security (RLS) is enabled for data protection.
 | `/api/ignored-base-ids` | GET/POST/DELETE | Manage ignored series |
 | `/api/ignored-event-ids` | GET/POST/DELETE | Manage ignored occurrences |
 
-## Troubleshooting
+## 🔧 Troubleshooting
 
 - **Events not updating:** Cleared via proper cache headers—should update immediately
 - **Missing recurring events:** Sync expands up to 500 occurrences per series
 - **Timezone wrong:** Select correct timezone from the 🌐 dropdown
 
-## What I Learned
+## 💭 What I Learned
 
 The hardest part: deciphering future events from recurring series that accumulated one-off adjustments over time. The way ICS encodes these makes it surprisingly complex to figure out what's actually happening next Tuesday. But the design decision that unlocked real utility: privacy-first by default. Showing "[Personal Event]" with password-gated reveal made the tool safe to demo with any audience—so more people could see what it does: detect conflicts between calendars *and* denoise by hiding events that clutter your calendar but don't actually matter. Good defaults expand both reach and utility.
 
-## What's Next
+## 🔮 What's Next
 
 I'm adding **an AI agent that proactively reminds me of important life events** (wedding anniversary, birthdays) and helps me plan ahead—suggesting how to celebrate, curating gift ideas, even buying small gifts on my behalf. The interesting part: teaching an agent to act autonomously on commerce decisions while respecting budget constraints and personal taste. It's agentic commerce in practice, juggling multiple calendars while ensuring nothing important falls through the cracks.
 

@@ -44,7 +44,9 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
+            <label htmlFor="password" className="sr-only">Password</label>
             <input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -52,11 +54,12 @@ export default function LoginPage() {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-lg bg-white placeholder-gray-400"
               style={{ color: '#111827', WebkitTextFillColor: '#111827' }}
               autoFocus
+              aria-describedby={error ? 'password-error' : undefined}
             />
           </div>
 
           {error && (
-            <p className="text-red-500 text-sm text-center">{error}</p>
+            <p id="password-error" className="text-red-500 text-sm text-center" role="alert">{error}</p>
           )}
 
           <button
