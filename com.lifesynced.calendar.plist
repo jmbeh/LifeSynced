@@ -7,10 +7,10 @@
     <key>ProgramArguments</key>
     <array>
         <string>/usr/bin/python3</string>
-        <string>/Users/jmbeh/Project Understanding/Builder_Lab/LifeSynced/sync_calendar.py</string>
+        <string>/Users/jmbeh/Personal Builder Lab/LifeSynced/sync_calendar.py</string>
     </array>
     <key>WorkingDirectory</key>
-    <string>/Users/jmbeh/Project Understanding/Builder_Lab/LifeSynced</string>
+    <string>/Users/jmbeh/Personal Builder Lab/LifeSynced</string>
     <key>StartCalendarInterval</key>
     <dict>
         <key>Hour</key>
