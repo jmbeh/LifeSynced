@@ -125,11 +125,19 @@ Row Level Security (RLS) is enabled for data protection.
 - **Missing recurring events:** Sync expands up to 500 occurrences per series
 - **Timezone wrong:** Select correct timezone from the 🌐 dropdown
 
-## Development
+## What I Learned
 
-See `CLAUDE.md` for detailed project structure and commands.
+The hardest part: deciphering future events from recurring series that accumulated one-off adjustments over time. The way ICS encodes these makes it surprisingly complex to figure out what's actually happening next Tuesday. But the design decision that unlocked real utility: privacy-first by default. Showing "[Personal Event]" with password-gated reveal made the tool safe to demo with any audience—so more people could see what it does: detect conflicts between calendars *and* denoise by hiding events that clutter your calendar but don't actually matter. Good defaults expand both reach and utility.
+
+## What's Next
+
+I'm adding **an AI agent that proactively reminds me of important life events** (wedding anniversary, birthdays) and helps me plan ahead—suggesting how to celebrate, curating gift ideas, even buying small gifts on my behalf. The interesting part: teaching an agent to act autonomously on commerce decisions while respecting budget constraints and personal taste. It's agentic commerce in practice, juggling multiple calendars while ensuring nothing important falls through the cracks.
 
 ---
 
-**Status:** Active  
+**Status:** Active (Constant Work in Progress)  
 **Purpose:** Personal/family productivity—unified calendar view with cloud sync
+
+## Development
+
+See `CLAUDE.md` for detailed project structure and commands.
