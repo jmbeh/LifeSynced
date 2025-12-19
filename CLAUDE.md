@@ -1,5 +1,14 @@
 # LifeSynced
 
+## 🚨 CRITICAL: GitHub Safety
+
+**This project syncs to personal GitHub only.**
+
+Git remote: Check with `git remote -v`
+Git author: Check with `git config user.email`
+
+**Vercel:** DO NOT push/deploy unless explicitly requested (git push = auto-deploy)
+
 ## Project Type
 Full-stack Next.js application with Supabase (PostgreSQL) backend, deployable to Vercel.
 
