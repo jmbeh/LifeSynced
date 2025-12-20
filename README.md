@@ -1,143 +1,95 @@
 # 📅 LifeSynced
 
-![Type](https://img.shields.io/badge/Type-App-blue)
-![Status](https://img.shields.io/badge/Status-Active-green)
-![Stack](https://img.shields.io/badge/Stack-Next.js%20%7C%20Supabase-blue)
-![Deploy](https://img.shields.io/badge/Deploy-Vercel-black)
+**Unified calendar that syncs work Outlook and personal iCloud calendars into one view.** Overlap detection, smart deduplication, timezone switching—accessible from any device.
 
-Unified calendar application that syncs work Outlook and personal iCloud calendars into a cloud database (Supabase) and surfaces everything in a modern web UI with overlap detection, smart deduplication, and family sharing.
+---
 
-## Why LifeSynced?
+## 🚀 See It Running
 
-Microsoft Outlook (commonly used in enterprise/work environments) does not support adding Apple iCloud calendars. The "Accounts" settings only allow connecting Outlook.com, Hotmail, Live, MSN, or Google—**no Apple/iCloud option exists**. For iPhone and iCloud users who rely on Apple Calendar for personal events, this creates a fragmented experience where work and personal calendars cannot be viewed together.
+### Option A: Auto-Generate Server Scripts (Recommended)
 
-LifeSynced solves this by pulling from both Outlook and iCloud ICS feeds into a unified view.
+In Cursor Chat, type:
+
+```
+@Generate-server-scripts.md @LifeSynced
+```
+
+This creates `start-servers.sh`, `stop-servers.sh`, and `check-servers.sh` for one-command startup.
+
+### Option B: Manual Quick Start
+
+```bash
+cd calendar-ui
+npm install
+cp env.example .env.local
+npm run dev
+```
+
+Open **http://localhost:3002** in your browser.
+
+**Note:** Full functionality requires Supabase + ICS calendar URLs—see Environment Variables below.
+
+---
+
+## ❓ Why LifeSynced?
+
+Microsoft Outlook doesn't support adding Apple iCloud calendars—only Outlook.com, Hotmail, Live, MSN, or Google. For iPhone users who rely on Apple Calendar for personal events, work and personal calendars can't be viewed together.
+
+**LifeSynced** pulls from both Outlook and iCloud ICS feeds into a unified view.
 
 ## ✨ Features
 
-- **Unified view:** Combine work Outlook and personal iCloud calendars into one timeline.
-- **Cloud-first:** Supabase (PostgreSQL) backend with Vercel deployment—accessible from any device.
-- **Time-grid views:** 24-hour grid (0000–2400) with Day, Week, and 4-Week modes.
-- **Overlap detection:** Highlight conflicts between work and personal events.
-- **Smart deduplication:** Avoid duplicate events across sync sources.
-- **Ignore events:** Hide recurring series or individual occurrences.
-- **Mobile-friendly:** Responsive design—Day view on mobile, Week view on desktop.
-- **Timezone selector:** Switch timezones when traveling.
-- **Event tooltips:** Hover/tap for event details.
-- **Real-time updates:** No caching issues—changes reflect immediately.
+- **Unified view** — Combine work Outlook and personal iCloud calendars
+- **Cloud-first** — Supabase (PostgreSQL) backend with Vercel deployment
+- **Time-grid views** — 24-hour grid with Day, Week, and 4-Week modes
+- **Overlap detection** — Highlight conflicts between work and personal
+- **Smart deduplication** — Avoid duplicate events across sync sources
+- **Ignore events** — Hide recurring series or individual occurrences
+- **Mobile-friendly** — Day view on mobile, Week view on desktop
+- **Timezone selector** — Switch timezones when traveling
 
-## 🚀 Quick Start (Cloud Deployment)
-
-### 1. Set up Supabase
-
-1. Create a project at [supabase.com](https://supabase.com)
-2. Run the schema from `calendar-ui/supabase/schema.sql` in SQL Editor
-3. Copy your project URL and service role key
-
-### 2. Configure environment
+## 🔑 Environment Variables
 
 Create `calendar-ui/.env.local`:
 
-```bash
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-OUTLOOK_ICS_URL=https://outlook.office365.com/owa/calendar/...
-APPLE_CALENDAR_ICS_URL_1=https://p123-caldav.icloud.com/...
-APPLE_CALENDAR_ICS_URL_2=https://p123-caldav.icloud.com/...
-```
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | ✅ | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase service role key |
+| `OUTLOOK_ICS_URL` | ✅ | Outlook calendar ICS feed URL |
+| `APPLE_CALENDAR_ICS_URL_1` | ✅ | iCloud calendar ICS URL |
+| `APPLE_CALENDAR_ICS_URL_2` | | Second iCloud calendar (optional) |
+| `APP_PASSWORD` | ✅ | App authentication password |
+| `PERSONAL_REVEAL_PASSWORD` | | Password to reveal personal event names |
 
-### 3. Deploy to Vercel
+### Database Setup
+
+Run `calendar-ui/supabase/schema.sql` in your Supabase SQL Editor.
+
+## 🚢 Deployment
+
+Deploy to Vercel:
 
 ```bash
 cd calendar-ui
 vercel --prod
 ```
 
-Add the same environment variables in Vercel project settings.
-
-### 4. Set up automatic sync
-
-Vercel cron syncs daily at 6 AM UTC (configured in `vercel.json`).  
-Manual sync: click the 🔄 button in the UI.
+Vercel cron syncs calendars daily at 6 AM UTC (configured in `vercel.json`).
 
 ---
-
-## Local Development
-
-```bash
-cd calendar-ui
-npm install
-npm run dev
-```
-
-Open `http://localhost:3002`
-
----
-
-## Architecture
-
-```
-┌─────────────────┐     ┌──────────────┐     ┌─────────────┐
-│  Outlook ICS    │────▶│              │────▶│             │
-│  iCloud ICS     │     │  Next.js API │     │  Supabase   │
-│  (Calendar      │     │  Routes      │     │  PostgreSQL │
-│   Feeds)        │     │  (TypeScript)│     │             │
-└─────────────────┘     └──────────────┘     └─────────────┘
-                               │
-                               ▼
-                        ┌──────────────┐
-                        │   React UI   │
-                        │  (Next.js)   │
-                        └──────────────┘
-```
-
-## 🔑 Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-side only) |
-| `OUTLOOK_ICS_URL` | Outlook calendar ICS feed URL |
-| `APPLE_CALENDAR_ICS_URL_1` | First iCloud calendar ICS URL |
-| `APPLE_CALENDAR_ICS_URL_2` | Second iCloud calendar ICS URL (optional) |
-
-## Database Schema
-
-- **`appointments`** – All calendar events with subject, times, location, organizer, source
-- **`ignored_base_ids`** – Recurring series to hide
-- **`ignored_event_ids`** – Individual occurrences to hide
-- **`sync_metadata`** – Last sync timestamps
-
-Row Level Security (RLS) is enabled for data protection.
-
-## API Routes
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/events` | GET | Fetch events (filtered by ignored lists) |
-| `/api/sync` | POST | Trigger calendar sync |
-| `/api/ignored-base-ids` | GET/POST/DELETE | Manage ignored series |
-| `/api/ignored-event-ids` | GET/POST/DELETE | Manage ignored occurrences |
-
-## 🔧 Troubleshooting
-
-- **Events not updating:** Cleared via proper cache headers—should update immediately
-- **Missing recurring events:** Sync expands up to 500 occurrences per series
-- **Timezone wrong:** Select correct timezone from the 🌐 dropdown
 
 ## 💭 What I Learned
 
-The hardest part: deciphering future events from recurring series that accumulated one-off adjustments over time. The way ICS encodes these makes it surprisingly complex to figure out what's actually happening next Tuesday. But the design decision that unlocked real utility: privacy-first by default. Showing "[Personal Event]" with password-gated reveal made the tool safe to demo with any audience—so more people could see what it does: detect conflicts between calendars *and* denoise by hiding events that clutter your calendar but don't actually matter. Good defaults expand both reach and utility.
+The hardest part: deciphering future events from recurring series that accumulated one-off adjustments over time. But the design decision that unlocked real utility: privacy-first by default. Showing "[Personal Event]" with password-gated reveal made the tool safe to demo with any audience—expanding both reach and utility.
 
 ## 🔮 What's Next
 
-I'm adding **an AI agent that proactively reminds me of important life events** (wedding anniversary, birthdays) and helps me plan ahead—suggesting how to celebrate, curating gift ideas, even buying small gifts on my behalf. The interesting part: teaching an agent to act autonomously on commerce decisions while respecting budget constraints and personal taste. It's agentic commerce in practice, juggling multiple calendars while ensuring nothing important falls through the cracks.
+Adding **an AI agent that proactively reminds me of important life events** (anniversaries, birthdays) and helps me plan ahead—suggesting celebrations, curating gift ideas, even buying small gifts on my behalf. Agentic commerce in practice.
 
 ---
 
-**Status:** Active (Constant Work in Progress)  
-**Purpose:** Personal/family productivity—unified calendar view with cloud sync
+**Status:** Active  
+**Stack:** Next.js 14 · TypeScript · Supabase · Tailwind · Vercel Cron
 
-## Development
-
-See `CLAUDE.md` for detailed project structure and commands.
+See `CLAUDE.md` for detailed technical setup and development commands.
